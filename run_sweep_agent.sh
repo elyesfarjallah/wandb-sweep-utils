@@ -126,6 +126,14 @@ else
     echo "✅ Max runs per agent: unlimited"
 fi
 
+# Extract project name from sweep ID for W&B agent command
+ENTITY_PROJECT="${SWEEP_ID%/*}"  # Remove the last part (sweep_id)
+PROJECT_NAME="${ENTITY_PROJECT#*/}"  # Remove the entity part, keep project
+ENTITY_NAME="${ENTITY_PROJECT%/*}"   # Remove the project part, keep entity
+SWEEP_ID_ONLY="${SWEEP_ID##*/}"      # Get only the sweep_id part
+echo "✅ Entity: $ENTITY_NAME"
+echo "✅ Project: $PROJECT_NAME"
+
 # Check W&B authentication
 echo ""
 echo "Checking W&B authentication..."
@@ -243,18 +251,18 @@ for i in $(seq 1 $NUM_AGENTS); do
         
         # Start agent with proper GPU assignment
         if [ -n "$MAX_RUNS_PER_AGENT" ]; then
-            CUDA_VISIBLE_DEVICES=$GPU_LIST wandb agent --project conditional-flow-matching --count "$MAX_RUNS_PER_AGENT" "$SWEEP_ID" &
+            CUDA_VISIBLE_DEVICES=$GPU_LIST wandb agent --entity "$ENTITY_NAME" --project "$PROJECT_NAME" --count "$MAX_RUNS_PER_AGENT" "$SWEEP_ID" &
         else
-            CUDA_VISIBLE_DEVICES=$GPU_LIST wandb agent --project conditional-flow-matching "$SWEEP_ID" &
+            CUDA_VISIBLE_DEVICES=$GPU_LIST wandb agent --entity "$ENTITY_NAME" --project "$PROJECT_NAME" "$SWEEP_ID" &
         fi
     else
         # CPU execution
         echo "  🎯 Agent $i: CPU mode"
         
         if [ -n "$MAX_RUNS_PER_AGENT" ]; then
-            wandb agent --project conditional-flow-matching --count "$MAX_RUNS_PER_AGENT" "$SWEEP_ID" &
+            wandb agent --entity "$ENTITY_NAME" --project "$PROJECT_NAME" --count "$MAX_RUNS_PER_AGENT" "$SWEEP_ID" &
         else
-            wandb agent --project conditional-flow-matching "$SWEEP_ID" &
+            wandb agent --entity "$ENTITY_NAME" --project "$PROJECT_NAME" "$SWEEP_ID" &
         fi
     fi
     
@@ -287,7 +295,8 @@ fi
 
 echo ""
 echo "🔗 Monitor sweep progress:"
-echo "   https://wandb.ai/conditional-flow-matching/sweeps/${SWEEP_ID##*/}"
+# Extract entity and project from sweep ID format: entity/project/sweep_id
+echo "   https://wandb.ai/${ENTITY_NAME}/${PROJECT_NAME}/sweeps/${SWEEP_ID_ONLY}"
 echo ""
 
 # Wait for all agents on this node to complete
@@ -306,4 +315,5 @@ if [ -n "$SLURM_NNODES" ] && [ "$SLURM_NNODES" -gt 1 ]; then
 fi
 
 echo "🆔 Sweep ID: $SWEEP_ID"
-echo "🔗 View results: https://wandb.ai/conditional-flow-matching/sweeps/${SWEEP_ID##*/}"
+# Extract entity and project from sweep ID format: entity/project/sweep_id
+echo "🔗 View results: https://wandb.ai/${ENTITY_NAME}/${PROJECT_NAME}/sweeps/${SWEEP_ID_ONLY}"
