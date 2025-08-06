@@ -13,12 +13,63 @@ A comprehensive toolkit for managing Weights & Biases hyperparameter sweeps in d
 
 ## 📦 Scripts Overview
 
-| Script | Purpose | Key Features |
-|--------|---------|--------------|
-| `run_sweep_agent.sh` | Distributed sweep agent runner | Unified logic, auto-detection, GPU-aware allocation |
-| `manage_sweep.sh` | Sweep lifecycle management | Pause/resume/stop/cancel operations |
-| `check_sweep_status.sh` | Status monitoring | Real-time progress tracking, agent status |
-| `check_sweep_exists.py` | Sweep validation utility | Python-based sweep existence verification |
+
+Below is a detailed description of each script, its arguments, and what it does/returns:
+
+---
+
+### `run_sweep_agent.sh`
+**Purpose:** Launches one or more W&B sweep agents on the current node, with support for distributed and SLURM environments.
+
+**Arguments:**
+- `<sweep_id>`: The sweep ID (or 'auto' to auto-detect from file)
+- `[gpus_per_agent]` (optional): Number of GPUs to allocate per agent (default: 1)
+- `[max_runs_per_agent]` (optional): Maximum runs per agent (default: unlimited)
+
+**Behavior:**
+- Joins the specified sweep and runs agents, one per SLURM task or process
+- Auto-detects sweep ID if 'auto' is given and a sweep ID file is present
+- Sets up rank isolation for independent logging
+- Returns: Exit code 0 on success, nonzero on error
+
+---
+
+### `manage_sweep.sh`
+**Purpose:** Manage the lifecycle of a W&B sweep (pause, resume, stop, cancel, or status).
+
+**Arguments:**
+- `<action>`: One of `pause`, `resume`, `stop`, `cancel`, or `status`
+- `<sweep_id>`: The sweep ID (or 'auto' to auto-detect from file)
+
+**Behavior:**
+- Performs the requested action on the sweep using the W&B API
+- Auto-detects sweep ID if 'auto' is given and a sweep ID file is present
+- Returns: Prints result/status to stdout, exit code 0 on success
+
+---
+
+### `check_sweep_status.sh`
+**Purpose:** Show the status of a W&B sweep, including agent and run progress.
+
+**Arguments:**
+- `[sweep_id]` (optional): The sweep ID (or 'auto' to auto-detect from file; default: 'auto')
+
+**Behavior:**
+- Prints sweep status, agent status, and progress to stdout
+- Auto-detects sweep ID if 'auto' is given and a sweep ID file is present
+- Returns: Prints status, exit code 0 on success
+
+---
+
+### `check_sweep_exists.py`
+**Purpose:** Python utility to check if a given W&B sweep exists (by querying the W&B API).
+
+**Arguments:**
+- Accepts a sweep ID as a command-line argument (or via stdin)
+
+**Behavior:**
+- Returns exit code 0 if the sweep exists, 1 if not, and prints a message to stdout
+- Can be used in scripts to validate sweep IDs before launching agents or jobs
 
 ## 🚀 Quick Start
 
